@@ -1,322 +1,66 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>Echo of Time — idle/clicker + time echoes</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мемогенератор</title>
 <style>
-  :root{
-    --bg:#0b0f19; --panel:#0f172a; --panel2:#0c1222; --text:#e6eefc; --muted:#a9b7d3;
-    --acc:#7dd3fc; --good:#34d399; --warn:#f59e0b; --bad:#ef4444;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{margin:0;background:radial-gradient(1200px 700px at 15% -10%,#101a37,transparent 60%),linear-gradient(180deg,#0e1530,#0b0f19 65%);
-       color:var(--text); font:500 16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu}
-  .wrap{max-width:940px;margin:0 auto;padding:16px;display:grid;gap:16px}
-  header{display:flex;justify-content:space-between;align-items:center;gap:12px}
-  .title{font-weight:800;letter-spacing:.3px}
-  .pill{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);padding:6px 10px;border-radius:999px;color:var(--text)}
-  .grid{display:grid;grid-template-columns:1fr 330px;gap:16px}
-  @media (max-width:860px){ .grid{grid-template-columns:1fr} }
-
-  .panel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
-  .center{padding:18px;display:grid;place-items:center}
-  .shop{padding:16px;display:grid;gap:12px}
-  .row{display:flex;gap:10px;flex-wrap:wrap}
-
-  /* Node */
-  .node{width:min(70vw,420px);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;cursor:pointer;user-select:none;
-        background:radial-gradient(closest-side,#172442,#0f1a33), conic-gradient(from var(--grad,0deg), #7dd3fc, #34d399, #fcd34d, #7dd3fc);
-        position:relative;border:2px solid rgba(255,255,255,.18);box-shadow:0 12px 40px rgba(0,0,0,.45) inset, 0 6px 16px rgba(0,0,0,.35)}
-  .node:active{transform:scale(.985)}
-  .node > .val{font-size:clamp(20px,4.5vw,28px); letter-spacing:.2px; text-align:center}
-  .node .pulse{position:absolute;inset:-8px;border-radius:50%;border:2px solid rgba(125,211,252,.35);opacity:0;}
-  .node.pulsing .pulse{animation:pulse 600ms ease-out}
-  @keyframes pulse{0%{transform:scale(.95);opacity:.65}100%{transform:scale(1.1);opacity:0}}
-
-  /* Floating +N */
-  .fly{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;font-weight:700}
-  .fly.show{animation:fly 700ms ease-out forwards}
-  @keyframes fly{0%{opacity:1;transform:translate(-50%,-40%)} 100%{opacity:0;transform:translate(-50%,-120%)}}
-
-  /* Buttons */
-  .btn{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:12px;cursor:pointer;
-       background:#0e162b;border:1px solid rgba(255,255,255,.12);color:var(--text)}
-  .btn .price{color:var(--muted)}
-  .btn.primary{background:#10223e;border-color:rgba(125,211,252,.4)}
-  .btn:disabled{opacity:.5;cursor:not-allowed}
-  .hint{color:var(--muted);font-size:14px}
-  .hr{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);margin:8px 0}
-
-  footer{opacity:.85;font-size:13px;padding:4px 2px;text-align:center;color:var(--muted)}
+  body { font-family: Arial, sans-serif; text-align: center; background: #f0f0f0; }
+  canvas { border: 2px solid #333; margin-top: 20px; }
+  input { margin: 5px; padding: 5px; width: 80%; font-size: 16px; }
+  button { margin-top: 10px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="title">Echo of Time</div>
-      <div class="row">
-        <div class="pill" id="uEnergy">Энергия: 0</div>
-        <div class="pill" id="uEPS">EPS: 0</div>
-        <div class="pill" id="uEchoes">Эхо: 0</div>
-      </div>
-    </header>
 
-    <div class="grid">
-      <div class="panel center">
-        <div id="node" class="node" role="button" aria-label="tap to harvest">
-          <div class="pulse"></div>
-          <div class="val">
-            <div id="nodeTitle">Временной осколок</div>
-            <div class="hint" id="nodeHint">Тапни / кликни</div>
-          </div>
-          <div id="fly" class="fly">+0</div>
-        </div>
-      </div>
-
-      <div class="panel shop">
-        <div class="row"><strong>Магазин</strong><span class="hint">прокачка и эхо</span></div>
-        <button id="bTap" class="btn primary">
-          <span>Tap Power Lv.<span id="tapLv">1</span> (+<span id="tapDelta">1</span>/тап)</span>
-          <span class="price" id="tapCost">10</span>
-        </button>
-        <button id="bEcho" class="btn">
-          <span>+Echo (повторяет твои действия, delay <span id="delayText">5.0с</span>)</span>
-          <span class="price" id="echoCost">50</span>
-        </button>
-        <button id="bDelay" class="btn">
-          <span>Reduce Delay (−0.5с всем эхо, мин. 1.0с)</span>
-          <span class="price" id="delayCost">80</span>
-        </button>
-        <button id="bAuto" class="btn">
-          <span>Auto Node Lv.<span id="autoLv">0</span> (+EPS)</span>
-          <span class="price" id="autoCost">40</span>
-        </button>
-        <div class="hr"></div>
-        <div class="hint">Совет: делай короткие ритмы тапов — эхо их подхватит и умножит.</div>
-      </div>
-    </div>
-
-    <footer>
-      Автосейв каждые 10 сек · офлайн‑прогресс учитывается · тач‑управление включено
-    </footer>
-  </div>
+<h1>Мемогенератор</h1>
+<input id="topText" type="text" placeholder="Текст сверху">
+<input id="bottomText" type="text" placeholder="Текст снизу">
+<br>
+<canvas id="memeCanvas" width="500" height="500"></canvas>
+<br>
+<button id="sendBtn">Отправить в чат</button>
 
 <script>
-(function(){
-  // ===== Utilities =====
-  const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
-  const fmt = n => {
-    if(!isFinite(n)) return '∞';
-    const abs=Math.abs(n);
-    if(abs<1e3) return n.toFixed(0);
-    const units=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','De'];
-    let u=0; while(n>=1000 && u<units.length-1){n/=1000;u++;}
-    return n.toFixed(2).replace(/\.00$/,'')+units[u];
+const canvas = document.getElementById('memeCanvas');
+const ctx = canvas.getContext('2d');
+const img = new Image();
+img.src = 'https://i.imgur.com/3vXhL3K.png'; // пример шаблона мемов (doge)
+img.onload = () => drawMeme();
+
+function drawMeme() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = 'white';
+  ctx.strokeStyle = 'black';
+  ctx.lineWidth = 2;
+  ctx.textAlign = 'center';
+  ctx.font = '30px Impact';
+
+  const topText = document.getElementById('topText').value.toUpperCase();
+  const bottomText = document.getElementById('bottomText').value.toUpperCase();
+
+  ctx.fillText(topText, canvas.width/2, 40);
+  ctx.strokeText(topText, canvas.width/2, 40);
+
+  ctx.fillText(bottomText, canvas.width/2, canvas.height - 20);
+  ctx.strokeText(bottomText, canvas.width/2, canvas.height - 20);
+}
+
+document.getElementById('topText').addEventListener('input', drawMeme);
+document.getElementById('bottomText').addEventListener('input', drawMeme);
+
+document.getElementById('sendBtn').addEventListener('click', () => {
+  const dataUrl = canvas.toDataURL('image/png');
+  
+  if (window.Telegram.WebApp) {
+    Telegram.WebApp.sendData(dataUrl); // отправляем данные в бот
+  } else {
+    alert('Откройте это через Telegram WebApp');
   }
-  const now = ()=>performance.now()/1000; // seconds
-
-  // ===== State =====
-  const state = {
-    energy: 0,
-    baseTap: 1,
-    tapLevel: 1,
-    autoLevel: 0,
-    echoes: [], // {delay, power, idx}
-    baseDelay: 5.0,
-    minDelay: 1.0,
-    actions: [], // timeline of {t, type}
-    lastTick: now(),
-    lastSave: now(),
-  };
-
-  // Costs & scaling
-  const costs = {
-    tapBase: 10, tapMul: 1.22,
-    echoBase: 50, echoMul: 1.35,
-    delayBase: 80, delayMul: 1.42,
-    autoBase: 40, autoMul: 1.28,
-  };
-
-  // Derived
-  function tapPower(){ return state.baseTap * (1 + (state.tapLevel-1)*0.35); }
-  function autoEPS(){ return state.autoLevel * 0.8; } // passive
-  function totalEPS(){
-    // very rough: passive + expected echoes of average tap rhythm
-    // we display only passive EPS in HUD to avoid confusion
-    return autoEPS();
-  }
-
-  // ===== DOM =====
-  const uEnergy = document.getElementById('uEnergy');
-  const uEPS = document.getElementById('uEPS');
-  const uEchoes = document.getElementById('uEchoes');
-  const tapLv = document.getElementById('tapLv');
-  const tapDelta = document.getElementById('tapDelta');
-  const autoLv = document.getElementById('autoLv');
-  const node = document.getElementById('node');
-  const fly = document.getElementById('fly');
-  const nodeHint = document.getElementById('nodeHint');
-
-  const tapCostEl = document.getElementById('tapCost');
-  const echoCostEl = document.getElementById('echoCost');
-  const delayCostEl = document.getElementById('delayCost');
-  const delayText = document.getElementById('delayText');
-  const autoCostEl = document.getElementById('autoCost');
-
-  const bTap = document.getElementById('bTap');
-  const bEcho = document.getElementById('bEcho');
-  const bDelay = document.getElementById('bDelay');
-  const bAuto = document.getElementById('bAuto');
-
-  // ===== Save/Load =====
-  const SAVE_KEY='echo_time_save_v1';
-  function save(){
-    const s = {...state, actions: []}; // do not persist action history (session only)
-    localStorage.setItem(SAVE_KEY, JSON.stringify(s));
-    state.lastSave = now();
-  }
-  function load(){
-    const raw = localStorage.getItem(SAVE_KEY);
-    if(!raw) return;
-    try{
-      const s = JSON.parse(raw);
-      state.energy = s.energy||0;
-      state.baseTap = s.baseTap||1;
-      state.tapLevel = s.tapLevel||1;
-      state.autoLevel = s.autoLevel||0;
-      state.baseDelay = s.baseDelay||5.0;
-      state.echoes = Array.isArray(s.echoes)? s.echoes.map(e=>({delay:e.delay||state.baseDelay, power:e.power||1, idx:0})) : [];
-      // offline progress (passive only)
-      const elapsed = Math.max(0, (Date.now() - (s.wallTime||Date.now()))/1000);
-      state.energy += autoEPS()*elapsed;
-    }catch(e){ console.warn('load fail', e); }
-  }
-
-  // also store wall time to compute offline
-  function saveWall(){
-    const raw = localStorage.getItem(SAVE_KEY);
-    if(!raw) return;
-    try{
-      const s = JSON.parse(raw); s.wallTime = Date.now();
-      localStorage.setItem(SAVE_KEY, JSON.stringify(s));
-    }catch(e){}
-  }
-
-  // ===== Actions timeline =====
-  function pushAction(type){
-    const t = now();
-    state.actions.push({t, type});
-    // keep only last 60 sec to avoid growth
-    const cut = t - 60;
-    while(state.actions.length && state.actions[0].t < cut) state.actions.shift();
-  }
-
-  // ===== Echo system =====
-  function addEcho(){
-    state.echoes.push({delay: state.baseDelay, power: 1, idx: 0});
-    updateHUD();
-  }
-
-  function processEchoes(){
-    const t = now();
-    for(const e of state.echoes){
-      // advance index to first actionable event
-      while(e.idx < state.actions.length && (t - e.delay) >= state.actions[e.idx].t){
-        const act = state.actions[e.idx++];
-        if(act.type==='tap') doTap(true, e.power);
-      }
-    }
-  }
-
-  // ===== Economy =====
-  function canBuy(cost){ return state.energy >= cost; }
-  const costTap = ()=> Math.ceil(costs.tapBase * Math.pow(costs.tapMul, state.tapLevel-1));
-  const costEcho = ()=> Math.ceil(costs.echoBase * Math.pow(costs.echoMul, state.echoes.length));
-  const costDelay = ()=> Math.ceil(costs.delayBase * Math.pow(costs.delayMul, Math.max(0, Math.round((5.0 - state.baseDelay)/0.5))));
-  const costAuto = ()=> Math.ceil(costs.autoBase * Math.pow(costs.autoMul, state.autoLevel));
-
-  function buyTap(){ const c=costTap(); if(!canBuy(c)) return; state.energy-=c; state.tapLevel++; }
-  function buyEcho(){ const c=costEcho(); if(!canBuy(c)) return; state.energy-=c; addEcho(); }
-  function buyDelay(){ const c=costDelay(); if(!canBuy(c)) return; if(state.baseDelay<=state.minDelay+1e-9) return; state.energy-=c; state.baseDelay = Math.max(state.minDelay, +(state.baseDelay-0.5).toFixed(1)); for(const e of state.echoes) e.delay = state.baseDelay; }
-  function buyAuto(){ const c=costAuto(); if(!canBuy(c)) return; state.energy-=c; state.autoLevel++; }
-
-  // ===== Tap / Harvest =====
-  let grad=0;
-  function visualTap(gain){
-    node.classList.remove('pulsing'); void node.offsetWidth; node.classList.add('pulsing');
-    fly.textContent = '+'+fmt(gain);
-    fly.classList.remove('show'); void fly.offsetWidth; fly.classList.add('show');
-    grad+=50; node.style.setProperty('--grad', grad+'deg');
-  }
-
-  function doTap(fromEcho=false, powerMul=1){
-    const gain = tapPower()*powerMul;
-    state.energy += gain;
-    if(!fromEcho) { pushAction('tap'); }
-    visualTap(gain);
-  }
-
-  // Touch & mouse
-  function bindTapArea(el, handler){
-    let lastTouch=0;
-    el.addEventListener('click', e=>{ handler(); });
-    el.addEventListener('touchstart', e=>{ e.preventDefault(); const nowT=Date.now(); if(nowT-lastTouch<100) return; lastTouch=nowT; handler(); }, {passive:false});
-  }
-  bindTapArea(node, ()=>doTap(false,1));
-
-  // ===== Loop =====
-  function tick(){
-    const t = now(); const dt = t - state.lastTick; state.lastTick = t;
-    // passive income
-    state.energy += autoEPS()*dt;
-    // echoes
-    processEchoes();
-    // render
-    updateHUD();
-    // autosave
-    if(t - state.lastSave > 10) save();
-    requestAnimationFrame(tick);
-  }
-
-  // ===== HUD =====
-  function updateHUD(){
-    uEnergy.textContent = 'Энергия: '+fmt(state.energy);
-    uEPS.textContent = 'EPS: '+fmt(totalEPS());
-    uEchoes.textContent = 'Эхо: '+state.echoes.length;
-
-    tapLv.textContent = state.tapLevel;
-    tapDelta.textContent = fmt(tapPower());
-    autoLv.textContent = state.autoLevel;
-
-    tapCostEl.textContent = fmt(costTap());
-    echoCostEl.textContent = fmt(costEcho());
-    delayCostEl.textContent = state.baseDelay<=state.minDelay? '—' : fmt(costDelay());
-    delayText.textContent = state.baseDelay.toFixed(1)+'с';
-    autoCostEl.textContent = fmt(costAuto());
-
-    bTap.disabled = !canBuy(costTap());
-    bEcho.disabled = !canBuy(costEcho());
-    bDelay.disabled = state.baseDelay<=state.minDelay || !canBuy(costDelay());
-    bAuto.disabled = !canBuy(costAuto());
-  }
-
-  // ===== Wire shop =====
-  bTap.addEventListener('click', ()=>{ buyTap(); updateHUD(); save(); });
-  bEcho.addEventListener('click', ()=>{ buyEcho(); updateHUD(); save(); });
-  bDelay.addEventListener('click', ()=>{ buyDelay(); updateHUD(); save(); });
-  bAuto.addEventListener('click', ()=>{ buyAuto(); updateHUD(); save(); });
-
-  // ===== Init =====
-  load();
-  // default first echo for fun after first purchase
-  if(state.echoes.length===0){ /* no echoes by default */ }
-  // start
-  updateHUD();
-  tick();
-  window.addEventListener('beforeunload', ()=>{ save(); saveWall(); });
-})();
+});
 </script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 </body>
 </html>
