@@ -1,66 +1,775 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Мемогенератор</title>
-<style>
-  body { font-family: Arial, sans-serif; text-align: center; background: #f0f0f0; }
-  canvas { border: 2px solid #333; margin-top: 20px; }
-  input { margin: 5px; padding: 5px; width: 80%; font-size: 16px; }
-  button { margin-top: 10px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Эволюция: От Клетки к Божеству</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a1a;
+            color: #fff;
+            line-height: 1.6;
+            user-select: none;
+            overflow-x: hidden;
+        }
+        .tabs {
+            display: flex;
+            background: #15152b;
+            padding: 10px;
+            border-bottom: 2px solid #2a2a5a;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+            background: #1e1e3f;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            background: #4a2ac9;
+            box-shadow: 0 0 15px #4a2ac9;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .container {
+            background: rgba(20, 20, 40, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 30px rgba(74, 42, 201, 0.3);
+        }
+        h1 {
+            color: #4a2ac9;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px #4a2ac9;
+        }
+        h2 {
+            color: #6c4ae8;
+            margin-bottom: 15px;
+        }
+        #evolution-count {
+            font-size: 2.5em;
+            text-align: center;
+            margin: 20px 0;
+            color: #ffdd00;
+            text-shadow: 0 0 15px #ffdd00;
+        }
+        .energy-name {
+            font-size: 0.6em;
+            color: #aaa;
+            display: block;
+        }
+        #clicker {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5em;
+            cursor: pointer;
+            border: 5px solid;
+            transition: all 0.15s;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0) 70%);
+        }
+        .upgrades-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .upgrade {
+            background: linear-gradient(145deg, #1a1a3a, #252550);
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 2px solid;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        .upgrade:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .upgrade:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        .upgrade-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #6c4ae8;
+        }
+        .upgrade-cost {
+            color: #ff5555;
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+        .upgrade-level {
+            color: #55ff55;
+            font-size: 0.9em;
+        }
+        .realm-progress {
+            height: 15px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4a2ac9, #6c4ae8);
+            width: 0%;
+            transition: width 0.5s;
+        }
+        .button {
+            padding: 12px 25px;
+            background: linear-gradient(145deg, #4a2ac9, #6c4ae8);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            margin: 10px 0;
+            transition: all 0.3s;
+        }
+        .button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px #4a2ac9;
+        }
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        .ascend-section {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: linear-gradient(145deg, #2a1a69, #3a2a89);
+            border-radius: 15px;
+            border: 2px solid #8a6ae8;
+        }
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        .achievement {
+            background: linear-gradient(145deg, #1a1a3a, #252550);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 5px solid #555;
+        }
+        .achievement.unlocked {
+            border-left: 5px solid gold;
+            background: linear-gradient(145deg, #2a2a5a, #353570);
+        }
+        .achievement-name {
+            font-weight: bold;
+            color: #ffdd00;
+            margin-bottom: 5px;
+        }
+        .ascend-upgrades {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .stat {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
+    <div class="tabs">
+        <div class="tab active" data-tab="main">Эволюция</div>
+        <div class="tab" data-tab="ascend">Вознесение</div>
+        <div class="tab" data-tab="achievements">Достижения</div>
+        <div class="tab" data-tab="stats">Статистика</div>
+    </div>
 
-<h1>Мемогенератор</h1>
-<input id="topText" type="text" placeholder="Текст сверху">
-<input id="bottomText" type="text" placeholder="Текст снизу">
-<br>
-<canvas id="memeCanvas" width="500" height="500"></canvas>
-<br>
-<button id="sendBtn">Отправить в чат</button>
+    <div class="tab-content active" id="main-tab">
+        <div class="container">
+            <h1 id="realm-title">Одноклеточный организм</h1>
+            <div id="evolution-count">0 <span class="energy-name" id="energy-name">Клеток</span></div>
+            
+            <div id="clicker">🦠</div>
+            
+            <div class="stats">
+                <div class="stat">Кликов в сек: <span id="clicks-per-sec">0</span></div>
+                <div class="stat">Авто-доход: <span id="energy-per-second">0</span>/сек</div>
+            </div>
+            
+            <div class="realm-progress">
+                <div class="progress-bar" id="realm-progress"></div>
+            </div>
+            <button id="next-realm-btn" class="button">Эволюционировать в Многоклеточный организм (1K)</button>
+        </div>
 
-<script>
-const canvas = document.getElementById('memeCanvas');
-const ctx = canvas.getContext('2d');
-const img = new Image();
-img.src = 'https://i.imgur.com/3vXhL3K.png'; // пример шаблона мемов (doge)
-img.onload = () => drawMeme();
+        <div class="container">
+            <h2>Улучшения эволюции</h2>
+            <div class="upgrades-grid" id="upgrades-container">
+                <!-- Улучшения генерируются скриптом -->
+            </div>
+        </div>
+    </div>
 
-function drawMeme() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    <div class="tab-content" id="ascend-tab">
+        <div class="container">
+            <h2>Вознесение</h2>
+            <div class="ascend-section">
+                <p>При вознесении вы начнёте заново, но получите ДНК очки для постоянных улучшений!</p>
+                <p>Текущие ДНК очки: <span id="dna-points">0</span></p>
+                <p>ДНК за вознесение: <span id="next-dna">10</span></p>
+                <button id="ascend-btn" class="button">Вознестись (1M клеток)</button>
+            </div>
+            
+            <h2>Улучшения ДНК</h2>
+            <div class="ascend-upgrades" id="ascend-upgrades-container">
+                <!-- Улучшения вознесения -->
+            </div>
+        </div>
+    </div>
 
-  ctx.fillStyle = 'white';
-  ctx.strokeStyle = 'black';
-  ctx.lineWidth = 2;
-  ctx.textAlign = 'center';
-  ctx.font = '30px Impact';
+    <div class="tab-content" id="achievements-tab">
+        <div class="container">
+            <h2>Достижения</h2>
+            <div class="achievements-grid" id="achievements-container">
+                <!-- Достижения -->
+            </div>
+        </div>
+    </div>
 
-  const topText = document.getElementById('topText').value.toUpperCase();
-  const bottomText = document.getElementById('bottomText').value.toUpperCase();
+    <div class="tab-content" id="stats-tab">
+        <div class="container">
+            <h2>Статистика</h2>
+            <div class="stats">
+                <div class="stat">Всего кликов: <span id="total-clicks">0</span></div>
+                <div class="stat">Всего клеток: <span id="total-energy">0</span></div>
+                <div class="stat">Вознесений: <span id="total-ascends">0</span></div>
+                <div class="stat">Время игры: <span id="play-time">0</span> сек</div>
+            </div>
+            <div class="stats">
+                <div class="stat">Сила клика: <span id="click-power">1</span></div>
+                <div class="stat">Авто-доход: <span id="auto-power">0</span>/сек</div>
+                <div class="stat">Множитель ДНК: <span id="dna-multiplier">1</span>x</div>
+                <div class="stat">Бонус вознесения: <span id="ascend-bonus">0</span>%</div>
+            </div>
+        </div>
+    </div>
 
-  ctx.fillText(topText, canvas.width/2, 40);
-  ctx.strokeText(topText, canvas.width/2, 40);
+    <script>
+        // ===== КОНСТАНТЫ И ПЕРЕМЕННЫЕ =====
+        const REALMS = [
+            {
+                name: "Одноклеточный организм",
+                energyName: "Клеток",
+                clicker: "🦠",
+                color: "#4a2ac9",
+                upgrades: [
+                    { name: "Деление клетки", cost: 15, costMultiplier: 1.3, effect: 1, type: "click", description: "+1 клетка за клик" },
+                    { name: "Митоз", cost: 50, costMultiplier: 1.4, effect: 0.5, type: "auto", description: "+0.5 клетки/сек" },
+                    { name: "Фотосинтез", cost: 100, costMultiplier: 1.5, effect: 2, type: "auto", description: "+2 клетки/сек" },
+                    { name: "Реснички", cost: 200, costMultiplier: 1.6, effect: 3, type: "click", description: "+3 клетки за клик" },
+                    { name: "Ядро клетки", cost: 500, costMultiplier: 1.7, effect: 5, type: "auto", description: "+5 клеток/сек" }
+                ],
+                nextRealmCost: 1000
+            },
+            {
+                name: "Многоклеточный организм",
+                energyName: "Тканей",
+                clicker: "🌿",
+                color: "#2ac94a",
+                upgrades: [
+                    { name: "Дифференциация", cost: 200, costMultiplier: 1.4, effect: 5, type: "click", description: "+5 тканей за клик" },
+                    { name: "Нервная система", cost: 500, costMultiplier: 1.5, effect: 3, type: "auto", description: "+3 ткани/сек" },
+                    { name: "Мышечные волокна", cost: 1000, costMultiplier: 1.6, effect: 10, type: "auto", description: "+10 тканей/сек" },
+                    { name: "Кровообращение", cost: 2000, costMultiplier: 1.7, effect: 8, type: "click", description: "+8 тканей за клик" },
+                    { name: "Пищеварительная система", cost: 5000, costMultiplier: 1.8, effect: 20, type: "auto", description: "+20 тканей/сек" }
+                ],
+                nextRealmCost: 10000
+            },
+            {
+                name: "Простое животное",
+                energyName: "Органов",
+                clicker: "🐛",
+                color: "#c92a6c",
+                upgrades: [
+                    { name: "Хитиновый панцирь", cost: 5000, costMultiplier: 1.5, effect: 20, type: "click", description: "+20 органов за клик" },
+                    { name: "Сложные глаза", cost: 10000, costMultiplier: 1.6, effect: 15, type: "auto", description: "+15 органов/сек" },
+                    { name: "Нервные узлы", cost: 20000, costMultiplier: 1.7, effect: 40, type: "auto", description: "+40 органов/сек" },
+                    { name: "Половая система", cost: 50000, costMultiplier: 1.8, effect: 30, type: "click", description: "+30 органов за клик" },
+                    { name: "Метаморфоза", cost: 100000, costMultiplier: 1.9, effect: 100, type: "auto", description: "+100 органов/сек" }
+                ],
+                nextRealmCost: 250000
+            },
+            {
+                name: "Высшее животное",
+                energyName: "Силы",
+                clicker: "🐺",
+                color: "#c9c92a",
+                upgrades: [
+                    { name: "Когти и клыки", cost: 100000, costMultiplier: 1.6, effect: 100, type: "click", description: "+100 силы за клик" },
+                    { name: "Социальная структура", cost: 250000, costMultiplier: 1.7, effect: 80, type: "auto", description: "+80 силы/сек" },
+                    { name: "Сложный мозг", cost: 500000, costMultiplier: 1.8, effect: 200, type: "auto", description: "+200 силы/сек" },
+                    { name: "Орудия труда", cost: 1000000, costMultiplier: 1.9, effect: 150, type: "click", description: "+150 силы за клик" },
+                    { name: "Язык и общение", cost: 2500000, costMultiplier: 2.0, effect: 500, type: "auto", description: "+500 силы/сек" }
+                ],
+                nextRealmCost: 5000000
+            },
+            {
+                name: "Разумное существо",
+                energyName: "Знаний",
+                clicker: "🧠",
+                color: "#2a8ac9",
+                upgrades: [
+                    { name: "Письменность", cost: 1000000, costMultiplier: 1.7, effect: 300, type: "click", description: "+300 знаний за клик" },
+                    { name: "Научный метод", cost: 3000000, costMultiplier: 1.8, effect: 250, type: "auto", description: "+250 знаний/сек" },
+                    { name: "Технологии", cost: 8000000, costMultiplier: 1.9, effect: 600, type: "auto", description: "+600 знаний/сек" },
+                    { name: "Искусственный интеллект", cost: 20000000, costMultiplier: 2.0, effect: 400, type: "click", description: "+400 знаний за клик" },
+                    { name: "Квантовые вычисления", cost: 50000000, costMultiplier: 2.1, effect: 1500, type: "auto", description: "+1500 знаний/сек" }
+                ],
+                nextRealmCost: 100000000
+            },
+            {
+                name: "Божество",
+                energyName: "Власти",
+                clicker: "👁️",
+                color: "#ffffff",
+                upgrades: [
+                    { name: "Сотворение миров", cost: 50000000, costMultiplier: 1.8, effect: 1000, type: "click", description: "+1000 власти за клик" },
+                    { name: "Манипуляция временем", cost: 150000000, costMultiplier: 1.9, effect: 800, type: "auto", description: "+800 власти/сек" },
+                    { name: "Бессмертие", cost: 500000000, costMultiplier: 2.0, effect: 2000, type: "auto", description: "+2000 власти/сек" },
+                    { name: "Абсолютное знание", cost: 1500000000, costMultiplier: 2.1, effect: 1200, type: "click", description: "+1200 власти за клик" },
+                    { name: "Трансцендентность", cost: 5000000000, costMultiplier: 2.2, effect: 5000, type: "auto", description: "+5000 власти/сек" }
+                ],
+                nextRealmCost: 10000000000
+            }
+        ];
 
-  ctx.fillText(bottomText, canvas.width/2, canvas.height - 20);
-  ctx.strokeText(bottomText, canvas.width/2, canvas.height - 20);
-}
+        const ASCEND_UPGRADES = [
+            { name: "Улучшенная ДНК", cost: 5, effect: 0.1, type: "clickMultiplier", description: "+10% к силе клика" },
+            { name: "Ускоренный метаболизм", cost: 8, effect: 0.15, type: "autoMultiplier", description: "+15% к авто-доходу" },
+            { name: "Эволюционная память", cost: 12, effect: 0.25, type: "dnaMultiplier", description: "+25% к ДНК за вознесение" },
+            { name: "Космическое сознание", cost: 20, effect: 0.5, type: "globalMultiplier", description: "+50% ко всему доходу" }
+        ];
 
-document.getElementById('topText').addEventListener('input', drawMeme);
-document.getElementById('bottomText').addEventListener('input', drawMeme);
+        const ACHIEVEMENTS = [
+            { id: "first_click", name: "Первое движение", description: "Сделать 1 клик", condition: (stats) => stats.totalClicks >= 1, reward: "Начало пути" },
+            { id: "first_evolution", name: "Первая эволюция", description: "Достигнуть многоклеточности", condition: (stats) => stats.currentRealmIndex >= 1, reward: "Множитель дохода +10%" },
+            { id: "animal_kingdom", name: "Царство животных", description: "Стать высшим животным", condition: (stats) => stats.currentRealmIndex >= 3, reward: "Множитель ДНК +25%" },
+            { id: "first_ascend", name: "Первое вознесение", description: "Вознестись в первый раз", condition: (stats) => stats.totalAscends >= 1, reward: "Начало вечности" },
+            { id: "godhood", name: "Божественная сущность", description: "Достигнуть уровня божества", condition: (stats) => stats.currentRealmIndex >= 5, reward: "Абсолютная сила" },
+            { id: "click_master", name: "Мастер клика", description: "Сделать 10,000 кликов", condition: (stats) => stats.totalClicks >= 10000, reward: "Вечные пальцы" },
+            { id: "billionaire", name: "Клеточный миллиардер", description: "Заработать 1M клеток", condition: (stats) => stats.totalEnergy >= 1000000, reward: "Множитель богатства +20%" }
+        ];
 
-document.getElementById('sendBtn').addEventListener('click', () => {
-  const dataUrl = canvas.toDataURL('image/png');
-  
-  if (window.Telegram.WebApp) {
-    Telegram.WebApp.sendData(dataUrl); // отправляем данные в бот
-  } else {
-    alert('Откройте это через Telegram WebApp');
-  }
-});
-</script>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+        let currentRealmIndex = 0;
+        let energy = 0;
+        let energyPerClick = 1;
+        let energyPerSecond = 0;
+        let dnaPoints = 0;
+        let totalClicks = 0;
+        let totalEnergy = 0;
+        let totalAscends = 0;
+        let playTime = 0;
+        let clickMultiplier = 1;
+        let autoMultiplier = 1;
+        let dnaMultiplier = 1;
+        let globalMultiplier = 1;
+        let lastClickTime = 0;
+        let clicksPerSecond = 0;
+
+        // ===== ЭЛЕМЕНТЫ DOM =====
+        const energyCountElement = document.getElementById('evolution-count');
+        const energyNameElement = document.getElementById('energy-name');
+        const realmTitleElement = document.getElementById('realm-title');
+        const clickerElement = document.getElementById('clicker');
+        const upgradesContainer = document.getElementById('upgrades-container');
+        const nextRealmBtn = document.getElementById('next-realm-btn');
+        const realmProgressBar = document.getElementById('realm-progress');
+        const ascendUpgradesContainer = document.getElementById('ascend-upgrades-container');
+        const achievementsContainer = document.getElementById('achievements-container');
+        const ascendBtn = document.getElementById('ascend-btn');
+        const dnaPointsElement = document.getElementById('dna-points');
+        const nextDnaElement = document.getElementById('next-dna');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        // ===== ИНИЦИАЛИЗАЦИЯ =====
+        function initGame() {
+            loadGame();
+            updateRealm();
+            renderUpgrades();
+            renderAscendUpgrades();
+            renderAchievements();
+            updateUI();
+            
+            setInterval(gameLoop, 1000);
+            setInterval(saveGame, 30000);
+            setInterval(updateStats, 1000);
+        }
+
+        function updateRealm() {
+            const realm = REALMS[currentRealmIndex];
+            realmTitleElement.textContent = realm.name;
+            energyNameElement.textContent = realm.energyName;
+            clickerElement.textContent = realm.clicker;
+            clickerElement.style.borderColor = realm.color;
+            clickerElement.style.boxShadow = `0 0 30px ${realm.color}, inset 0 0 20px ${realm.color}`;
+            
+            nextRealmBtn.textContent = `Эволюционировать в ${REALMS[currentRealmIndex + 1]?.name || 'следующую форму'} (${formatNumber(realm.nextRealmCost)})`;
+            nextRealmBtn.style.display = energy >= realm.nextRealmCost ? 'block' : 'none';
+            
+            const progress = Math.min(100, (energy / realm.nextRealmCost) * 100);
+            realmProgressBar.style.width = `${progress}%`;
+        }
+
+        // ===== ОСНОВНАЯ МЕХАНИКА =====
+        function gameLoop() {
+            energy += energyPerSecond * autoMultiplier * globalMultiplier;
+            totalEnergy += energyPerSecond * autoMultiplier * globalMultiplier;
+            playTime++;
+            updateUI();
+        }
+
+        clickerElement.addEventListener('click', () => {
+            const now = Date.now();
+            if (now - lastClickTime < 1000) {
+                clicksPerSecond = (clicksPerSecond * 0.8) + 0.2;
+            } else {
+                clicksPerSecond = clicksPerSecond * 0.9;
+            }
+            lastClickTime = now;
+            
+            energy += energyPerClick * clickMultiplier * globalMultiplier;
+            totalEnergy += energyPerClick * clickMultiplier * globalMultiplier;
+            totalClicks++;
+            
+            clickerElement.style.transform = 'scale(0.9)';
+            setTimeout(() => clickerElement.style.transform = 'scale(1)', 100);
+            updateUI();
+        });
+
+        nextRealmBtn.addEventListener('click', () => {
+            const realm = REALMS[currentRealmIndex];
+            if (energy >= realm.nextRealmCost) {
+                energy = Math.floor(energy - realm.nextRealmCost);
+                currentRealmIndex++;
+                updateRealm();
+                renderUpgrades();
+                updateUI();
+                saveGame();
+                checkAchievements();
+            }
+        });
+
+        ascendBtn.addEventListener('click', () => {
+            const realm = REALMS[currentRealmIndex];
+            if (energy >= 1000000) {
+                const dnaEarned = Math.floor((10 + (totalAscends * 2)) * dnaMultiplier);
+                dnaPoints += dnaEarned;
+                totalAscends++;
+                
+                // Сброс прогресса
+                currentRealmIndex = 0;
+                energy = 0;
+                energyPerClick = 1;
+                energyPerSecond = 0;
+                REALMS.forEach(realm => {
+                    realm.upgrades.forEach(upgrade => {
+                        upgrade.level = 0;
+                        upgrade.cost = upgrade.cost;
+                    });
+                });
+                
+                updateRealm();
+                renderUpgrades();
+                updateUI();
+                saveGame();
+                checkAchievements();
+            }
+        });
+
+        // ===== СИСТЕМА УЛУЧШЕНИЙ =====
+        function renderUpgrades() {
+            upgradesContainer.innerHTML = '';
+            const realm = REALMS[currentRealmIndex];
+            
+            realm.upgrades.forEach((upgrade, index) => {
+                const upgradeElement = document.createElement('div');
+                upgradeElement.className = 'upgrade';
+                upgradeElement.style.borderColor = realm.color;
+                upgradeElement.innerHTML = `
+                    <div class="upgrade-name">${upgrade.name}</div>
+                    <div>${upgrade.description}</div>
+                    <div class="upgrade-cost">Стоимость: ${formatNumber(Math.floor(upgrade.cost))} ${realm.energyName}</div>
+                    <div class="upgrade-level">Уровень: ${upgrade.level || 0}</div>
+                `;
+                
+                upgradeElement.addEventListener('click', () => buyUpgrade(index));
+                upgradesContainer.appendChild(upgradeElement);
+            });
+        }
+
+        function buyUpgrade(index) {
+            const realm = REALMS[currentRealmIndex];
+            const upgrade = realm.upgrades[index];
+            
+            if (energy >= upgrade.cost) {
+                energy -= upgrade.cost;
+                
+                if (!upgrade.level) upgrade.level = 0;
+                upgrade.level++;
+                
+                upgrade.cost = Math.floor(upgrade.cost * upgrade.costMultiplier);
+                
+                if (upgrade.type === 'click') {
+                    energyPerClick += upgrade.effect;
+                } else if (upgrade.type === 'auto') {
+                    energyPerSecond += upgrade.effect;
+                }
+                
+                updateUI();
+                saveGame();
+            }
+        }
+
+        // ===== СИСТЕМА ВОЗНЕСЕНИЯ =====
+        function renderAscendUpgrades() {
+            ascendUpgradesContainer.innerHTML = '';
+            
+            ASCEND_UPGRADES.forEach((upgrade, index) => {
+                const upgradeElement = document.createElement('div');
+                upgradeElement.className = 'upgrade';
+                upgradeElement.innerHTML = `
+                    <div class="upgrade-name">${upgrade.name}</div>
+                    <div>${upgrade.description}</div>
+                    <div class="upgrade-cost">Стоимость: ${upgrade.cost} ДНК</div>
+                    <div class="upgrade-level">Уровень: ${upgrade.level || 0}</div>
+                `;
+                
+                upgradeElement.addEventListener('click', () => buyAscendUpgrade(index));
+                ascendUpgradesContainer.appendChild(upgradeElement);
+            });
+        }
+
+        function buyAscendUpgrade(index) {
+            const upgrade = ASCEND_UPGRADES[index];
+            
+            if (dnaPoints >= upgrade.cost) {
+                dnaPoints -= upgrade.cost;
+                upgrade.cost = Math.floor(upgrade.cost * 1.5);
+                
+                if (!upgrade.level) upgrade.level = 0;
+                upgrade.level++;
+                
+                if (upgrade.type === 'clickMultiplier') clickMultiplier += upgrade.effect;
+                else if (upgrade.type === 'autoMultiplier') autoMultiplier += upgrade.effect;
+                else if (upgrade.type === 'dnaMultiplier') dnaMultiplier += upgrade.effect;
+                else if (upgrade.type === 'globalMultiplier') globalMultiplier += upgrade.effect;
+                
+                updateUI();
+                saveGame();
+            }
+        }
+
+        // ===== СИСТЕМА ДОСТИЖЕНИЙ =====
+        function renderAchievements() {
+            achievementsContainer.innerHTML = '';
+            
+            ACHIEVEMENTS.forEach(achievement => {
+                const achieved = achievement.condition({ currentRealmIndex, totalClicks, totalEnergy, totalAscends });
+                const achievementElement = document.createElement('div');
+                achievementElement.className = `achievement ${achieved ? 'unlocked' : ''}`;
+                achievementElement.innerHTML = `
+                    <div class="achievement-name">${achievement.name}</div>
+                    <div>${achievement.description}</div>
+                    <div><em>Награда: ${achievement.reward}</em></div>
+                `;
+                achievementsContainer.appendChild(achievementElement);
+            });
+        }
+
+        function checkAchievements() {
+            renderAchievements();
+        }
+
+        // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
+        function updateUI() {
+            const realm = REALMS[currentRealmIndex];
+            energyCountElement.textContent = `${formatNumber(Math.floor(energy))} ${realm.energyName}`;
+            energyCountElement.style.color = realm.color;
+            
+            document.getElementById('energy-per-second').textContent = formatNumber(Math.floor(energyPerSecond * autoMultiplier * globalMultiplier));
+            document.getElementById('clicks-per-sec').textContent = clicksPerSecond.toFixed(1);
+            document.getElementById('total-clicks').textContent = formatNumber(totalClicks);
+            document.getElementById('total-energy').textContent = formatNumber(totalEnergy);
+            document.getElementById('total-ascends').textContent = totalAscends;
+            document.getElementById('play-time').textContent = formatTime(playTime);
+            document.getElementById('click-power').textContent = formatNumber(energyPerClick * clickMultiplier * globalMultiplier);
+            document.getElementById('auto-power').textContent = formatNumber(energyPerSecond * autoMultiplier * globalMultiplier);
+            document.getElementById('dna-multiplier').textContent = dnaMultiplier.toFixed(2) + 'x';
+            document.getElementById('ascend-bonus').textContent = Math.floor((dnaMultiplier - 1) * 100);
+            
+            dnaPointsElement.textContent = dnaPoints;
+            nextDnaElement.textContent = Math.floor((10 + (totalAscends * 2)) * dnaMultiplier);
+            
+            ascendBtn.disabled = energy < 1000000;
+            
+            // Обновляем кнопки улучшений
+            const upgradeElements = document.querySelectorAll('#upgrades-container .upgrade');
+            upgradeElements.forEach((element, index) => {
+                const upgrade = realm.upgrades[index];
+                element.querySelector('.upgrade-cost').textContent = 
+                    `Стоимость: ${formatNumber(Math.floor(upgrade.cost))} ${realm.energyName}`;
+                element.querySelector('.upgrade-level').textContent = 
+                    `Уровень: ${upgrade.level || 0}`;
+                
+                element.disabled = energy < upgrade.cost;
+            });
+            
+            // Обновляем кнопки улучшений вознесения
+            const ascendUpgradeElements = document.querySelectorAll('#ascend-upgrades-container .upgrade');
+            ascendUpgradeElements.forEach((element, index) => {
+                const upgrade = ASCEND_UPGRADES[index];
+                element.querySelector('.upgrade-cost').textContent = 
+                    `Стоимость: ${upgrade.cost} ДНК`;
+                element.querySelector('.upgrade-level').textContent = 
+                    `Уровень: ${upgrade.level || 0}`;
+                
+                element.disabled = dnaPoints < upgrade.cost;
+            });
+            
+            updateRealm();
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000000) return (num / 1000000000).toFixed(1) + 'B';
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return Math.floor(num);
+        }
+
+        function formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateStats() {
+            document.getElementById('energy-per-second').textContent = formatNumber(Math.floor(energyPerSecond * autoMultiplier * globalMultiplier));
+            document.getElementById('clicks-per-sec').textContent = clicksPerSecond.toFixed(1);
+        }
+
+        // ===== СИСТЕМА СОХРАНЕНИЯ =====
+        function saveGame() {
+            const saveData = {
+                currentRealmIndex,
+                energy,
+                energyPerClick,
+                energyPerSecond,
+                dnaPoints,
+                totalClicks,
+                totalEnergy,
+                totalAscends,
+                playTime,
+                clickMultiplier,
+                autoMultiplier,
+                dnaMultiplier,
+                globalMultiplier,
+                realms: REALMS,
+                ascendUpgrades: ASCEND_UPGRADES
+            };
+            localStorage.setItem('evolutionClickerSave', JSON.stringify(saveData));
+        }
+
+        function loadGame() {
+            const saveData = JSON.parse(localStorage.getItem('evolutionClickerSave'));
+            if (saveData) {
+                currentRealmIndex = saveData.currentRealmIndex || 0;
+                energy = saveData.energy || 0;
+                energyPerClick = saveData.energyPerClick || 1;
+                energyPerSecond = saveData.energyPerSecond || 0;
+                dnaPoints = saveData.dnaPoints || 0;
+                totalClicks = saveData.totalClicks || 0;
+                totalEnergy = saveData.totalEnergy || 0;
+                totalAscends = saveData.totalAscends || 0;
+                playTime = saveData.playTime || 0;
+                clickMultiplier = saveData.clickMultiplier || 1;
+                autoMultiplier = saveData.autoMultiplier || 1;
+                dnaMultiplier = saveData.dnaMultiplier || 1;
+                globalMultiplier = saveData.globalMultiplier || 1;
+                
+                if (saveData.realms) {
+                    saveData.realms.forEach((savedRealm, realmIndex) => {
+                        if (REALMS[realmIndex]) {
+                            savedRealm.upgrades.forEach((savedUpgrade, upgradeIndex) => {
+                                if (REALMS[realmIndex].upgrades[upgradeIndex]) {
+                                    REALMS[realmIndex].upgrades[upgradeIndex].level = savedUpgrade.level;
+                                    REALMS[realmIndex].upgrades[upgradeIndex].cost = savedUpgrade.cost;
+                                }
+                            });
+                        }
+                    });
+                }
+                
+                if (saveData.ascendUpgrades) {
+                    saveData.ascendUpgrades.forEach((savedUpgrade, index) => {
+                        if (ASCEND_UPGRADES[index]) {
+                            ASCEND_UPGRADES[index].level = savedUpgrade.level;
+                            ASCEND_UPGRADES[index].cost = savedUpgrade.cost;
+                        }
+                    });
+                }
+            }
+        }
+
+        // ===== СИСТЕМА ВКЛАДОК =====
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.getAttribute('data-tab');
+                
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(tc => tc.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(`${tabName}-tab`).classList.add('active');
+            });
+        });
+
+        // Запускаем игру
+        window.addEventListener('load', initGame);
+    </script>
 </body>
 </html>
